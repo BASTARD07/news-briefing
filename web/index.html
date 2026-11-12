@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>News Briefing</title>
+<meta name="theme-color" content="#14110f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Briefing">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root {
+    --bg: #14110f; --panel: #1e1a17; --line: #2e2824; --ink: #f3ece4; --mute: #a39686;
+    --accent: #ff7a3d; --accent-ink: #1a0d05; --ok: #7fc8a0;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); }
+  body { padding: max(16px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom)); }
+  main { max-width: 560px; margin: 0 auto; }
+
+  header { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin: 8px 0 20px; }
+  .kicker { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  h1 { font-family: var(--serif); font-weight: 600; font-size: 30px; line-height: 1.1; margin: 4px 0 0; }
+  .updated { font-size: 13px; color: var(--mute); margin-top: 6px; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .icon-btn { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--line); flex: none; }
+  .icon-btn:active { background: var(--panel); }
+  .icon-btn svg { width: 20px; height: 20px; }
+  .spin svg { animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .player { background: var(--panel); border: 1px solid var(--line); border-radius: 20px; padding: 20px; }
+  .now-src { font-size: 13px; font-weight: 600; color: var(--accent); min-height: 18px; }
+  .now-title { font-family: var(--serif); font-size: 21px; line-height: 1.3; margin: 6px 0 16px; min-height: 54px; }
+  .bar { position: relative; height: 28px; cursor: pointer; touch-action: none; }
+  .bar .track { position: absolute; left: 0; right: 0; top: 12px; height: 4px; border-radius: 2px; background: var(--line); }
+  .bar .fill { position: absolute; left: 0; top: 12px; height: 4px; border-radius: 2px; background: var(--accent); width: 0; }
+  .bar .knob { position: absolute; top: 7px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; background: var(--ink); left: 0; }
+  .times { display: flex; justify-content: space-between; font-size: 12px; color: var(--mute); font-variant-numeric: tabular-nums; }
+  .controls { display: flex; align-items: center; justify-content: center; gap: 22px; margin-top: 10px; }
+  .play { width: 72px; height: 72px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; }
+  .play:active { transform: scale(.96); }
+  .play svg { width: 30px; height: 30px; }
+  .ctl svg { width: 28px; height: 28px; }
+  .ctl:disabled { opacity: .3; }
+  .speed { position: absolute; }
+  .row2 { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; font-size: 13px; color: var(--mute); }
+  .pill { border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; font-size: 13px; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+  h2 { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--mute); font-weight: 600; margin: 28px 4px 10px; display: flex; justify-content: space-between; }
+  ol { list-style: none; margin: 0; padding: 0; }
+  li { display: flex; gap: 12px; align-items: flex-start; padding: 14px 4px; border-bottom: 1px solid var(--line); }
+  li .num { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--line); display: grid; place-items: center; font-size: 12px; color: var(--mute); flex: none; margin-top: 1px; }
+  li.current .num { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 700; }
+  li.done .num { color: var(--ok); border-color: var(--ok); }
+  li .body { flex: 1; min-width: 0; cursor: pointer; }
+  li .src { font-size: 13px; font-weight: 600; }
+  li .t { font-size: 15px; line-height: 1.35; color: var(--ink); opacity: .85; margin-top: 2px; }
+  li .meta { font-size: 12px; color: var(--mute); margin-top: 4px; }
+  li.off .body { opacity: .35; }
+  li.off .t { text-decoration: line-through; }
+  .toggle { width: 40px; height: 24px; border-radius: 12px; background: var(--accent); position: relative; flex: none; margin-top: 2px; }
+  .toggle::after { content: ""; position: absolute; top: 3px; left: 19px; width: 18px; height: 18px; border-radius: 50%; background: var(--accent-ink); transition: left .15s; }
+  li.off .toggle { background: var(--line); }
+  li.off .toggle::after { left: 3px; background: var(--mute); }
+  .msg { color: var(--mute); text-align: center; padding: 40px 10px; line-height: 1.5; }
+  .err { font-size: 12px; color: #ff9d7a; margin-top: 4px; }
+  footer { font-size: 12px; color: var(--mute); text-align: center; margin-top: 28px; line-height: 1.5; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <div class="kicker" id="kicker">Today</div>
+      <h1 id="title">News Briefing</h1>
+      <div class="updated" id="updated">Loading…</div>
+    </div>
+    <button class="icon-btn" id="refresh" aria-label="Refresh">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+    </button>
+  </header>
+
+  <section class="player" aria-label="Player">
+    <div class="now-src" id="nowSrc">&nbsp;</div>
+    <div class="now-title" id="nowTitle">Press play to hear the latest from every source.</div>
+    <div class="bar" id="bar" aria-label="Seek"><div class="track"></div><div class="fill" id="fill"></div><div class="knob" id="knob"></div></div>
+    <div class="times"><span id="cur">0:00</span><span id="dur">0:00</span></div>
+    <div class="controls">
+      <button class="ctl" id="prev" aria-label="Previous source"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button>
+      <button class="play" id="play" aria-label="Play">
+        <svg id="icoPlay" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        <svg id="icoPause" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+      </button>
+      <button class="ctl" id="next" aria-label="Next source"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg></button>
+    </div>
+    <div class="row2">
+      <span id="left"></span>
+      <button class="pill" id="speed" aria-label="Playback speed">1×</button>
+    </div>
+  </section>
+
+  <h2><span>Lineup</span><span id="count"></span></h2>
+  <ol id="list"><li class="msg">Loading today's newscasts…</li></ol>
+
+  <footer>Audio streams directly from each publisher.<br>Tap a story to jump to it · use the switch to skip a source on this device.</footer>
+</main>
+
+<audio id="audio" preload="auto"></audio>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const audio = $("audio");
+  const SPEEDS = [1, 1.15, 1.25, 1.5, 0.9];
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem("nb:" + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+    set(k, v) { try { localStorage.setItem("nb:" + k, JSON.stringify(v)); } catch {} }
+  };
+
+  let data = null;          // briefing.json
+  let queue = [];           // flattened [{kind, src, seg}]
+  let qi = -1;              // index into queue
+  let skipped = new Set(store.get("skipped", []));
+  let speed = store.get("speed", 1);
+  let done = new Set();
+  let failed = new Set();
+
+  const fmt = s => { if (!isFinite(s) || s < 0) s = 0; s = Math.round(s); const m = Math.floor(s / 60); return m + ":" + String(s % 60).padStart(2, "0"); };
+  const ago = iso => {
+    const m = Math.round((Date.now() - new Date(iso)) / 60000);
+    if (m < 1) return "just now"; if (m < 60) return m + " min ago";
+    const h = Math.round(m / 60); return h + (h === 1 ? " hour ago" : " hours ago");
+  };
+  const clock = iso => new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
+  let pending = null;
+  function apply(fresh) {
+    audio.pause(); audio.removeAttribute("src");
+    data = fresh; pending = null; qi = -1; done.clear(); failed.clear();
+    buildQueue(); setIdle(); render();
+  }
+
+  // force = user tapped refresh: switch to a newer build even mid-briefing.
+  // Otherwise a newer build waits until the current briefing is idle/finished.
+  async function load(force) {
+    $("refresh").classList.add("spin");
+    try {
+      const r = await fetch("briefing.json?t=" + Date.now(), { cache: "no-store" });
+      if (!r.ok) throw new Error(r.status);
+      const fresh = await r.json();
+      if (data && fresh.generated === data.generated) { render(); return; }
+      if (!data || qi === -1 || force) apply(fresh);
+      else { pending = fresh; render(); $("updated").textContent = "Newer briefing ready — tap ↻ to switch"; }
+    } catch (e) {
+      if (!data) $("list").innerHTML = '<li class="msg">Couldn\'t load the briefing. Check your connection and tap refresh.</li>';
+      $("updated").textContent = "Offline — tap refresh to retry";
+    } finally {
+      $("refresh").classList.remove("spin");
+    }
+  }
+
+  function buildQueue() {
+    queue = [];
+    data.segments.forEach((s, i) => {
+      if (skipped.has(s.source)) return;
+      if (s.intro) queue.push({ kind: "intro", src: s.intro, seg: i });
+      queue.push({ kind: "news", src: s.audio, seg: i });
+    });
+    if (data.outro && queue.length) queue.push({ kind: "outro", src: data.outro, seg: -1 });
+  }
+
+  function activeSegs() { return data.segments.map((s, i) => i).filter(i => !skipped.has(data.segments[i].source)); }
+
+  function render() {
+    const d = new Date(data.generated);
+    $("kicker").textContent = d.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" });
+    $("title").textContent = data.title || "News Briefing";
+    $("updated").textContent = "Updated " + ago(data.generated);
+    document.title = data.title || "News Briefing";
+    const cur = queue[qi]?.seg;
+    const list = $("list");
+    list.innerHTML = "";
+    data.segments.forEach((s, i) => {
+      const li = document.createElement("li");
+      if (skipped.has(s.source)) li.classList.add("off");
+      if (i === cur) li.classList.add("current");
+      else if (done.has(i)) li.classList.add("done");
+      li.innerHTML = `
+        <div class="num">${done.has(i) && i !== cur ? "✓" : i + 1}</div>
+        <div class="body">
+          <div class="src"></div><div class="t"></div>
+          <div class="meta"></div>${failed.has(i) ? '<div class="err">Couldn\'t play this one — skipped.</div>' : ""}
+        </div>
+        <button class="toggle" aria-label="Include ${s.source}"></button>`;
+      li.querySelector(".src").textContent = s.source;
+      li.querySelector(".t").textContent = s.title;
+      li.querySelector(".meta").textContent = [s.duration ? fmt(s.duration) : null, "posted " + clock(s.published)].filter(Boolean).join(" · ");
+      li.querySelector(".body").onclick = () => { if (skipped.has(s.source)) return; jumpToSeg(i, true); };
+      li.querySelector(".toggle").onclick = () => toggleSource(s.source);
+      list.appendChild(li);
+    });
+    const act = activeSegs();
+    const total = act.reduce((a, i) => a + (data.segments[i].duration || 0), 0);
+    $("count").textContent = `${act.length} of ${data.segments.length} · ~${Math.max(1, Math.round(total / 60))} min`;
+    updateLeft();
+    $("prev").disabled = qi <= 0;
+    $("next").disabled = qi >= queue.length - 1 && qi !== -1;
+  }
+
+  function toggleSource(name) {
+    const curItem = queue[qi];
+    if (skipped.has(name)) skipped.delete(name); else skipped.add(name);
+    store.set("skipped", [...skipped]);
+    const wasPlaying = !audio.paused;
+    buildQueue();
+    if (curItem) {
+      const j = queue.findIndex(q => q.kind === curItem.kind && q.seg === curItem.seg);
+      if (j >= 0) qi = j;
+      else { // current source just got switched off: move on
+        const nextJ = queue.findIndex(q => q.seg > curItem.seg || q.kind === "outro");
+        if (nextJ >= 0) { qi = nextJ; startItem(wasPlaying); } else { audio.pause(); qi = -1; setIdle(); }
+      }
+    }
+    render();
+  }
+
+  function updateLeft() {
+    if (!data) return;
+    const cur = queue[qi];
+    let rem = 0;
+    for (let j = Math.max(qi, 0); j < queue.length; j++) {
+      const q = queue[j];
+      if (q.kind !== "news") continue;
+      const segDur = data.segments[q.seg].duration || 0;
+      rem += (j === qi && cur) ? Math.max(0, (audio.duration || segDur) - audio.currentTime) : segDur;
+    }
+    $("left").textContent = qi < 0 ? "" : (Math.round(rem / 60 / speed) + " min left");
+  }
+
+  function setIdle() {
+    $("nowSrc").innerHTML = "&nbsp;";
+    $("nowTitle").textContent = "Press play to hear the latest from every source.";
+    $("cur").textContent = "0:00"; $("dur").textContent = "0:00";
+    setBar(0);
+  }
+
+  function showNow() {
+    const q = queue[qi]; if (!q) return;
+    if (q.kind === "outro") { $("nowSrc").textContent = "That's all"; $("nowTitle").textContent = "That's your briefing."; return; }
+    const s = data.segments[q.seg];
+    $("nowSrc").textContent = s.source;
+    $("nowTitle").textContent = s.title;
+    if ("mediaSession" in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: s.title, artist: s.source, album: data.title || "News Briefing",
+        artwork: [{ src: "icon-512.png", sizes: "512x512", type: "image/png" }]
+      });
+    }
+  }
+
+  function startItem(play = true) {
+    const q = queue[qi]; if (!q) return;
+    audio.src = q.src;
+    audio.playbackRate = speed;
+    showNow(); render();
+    if (play) audio.play().catch(() => {});
+  }
+
+  function jumpToSeg(segIdx, preferIntro) {
+    let j = queue.findIndex(q => q.seg === segIdx && q.kind === (preferIntro ? "intro" : "news"));
+    if (j < 0) j = queue.findIndex(q => q.seg === segIdx);
+    if (j < 0) return;
+    qi = j; startItem(true);
+  }
+
+  function advance() {
+    const q = queue[qi];
+    if (q && q.kind === "news") done.add(q.seg);
+    if (qi < queue.length - 1) { qi++; startItem(true); }
+    else { qi = -1; setPlaying(false); if (pending) apply(pending); else { setIdle(); render(); } }
+  }
+
+  function setPlaying(p) {
+    $("icoPlay").style.display = p ? "none" : "";
+    $("icoPause").style.display = p ? "" : "none";
+    $("play").setAttribute("aria-label", p ? "Pause" : "Play");
+    if ("mediaSession" in navigator) navigator.mediaSession.playbackState = p ? "playing" : "paused";
+  }
+
+  function segStep(dir) {
+    // move to the previous/next *source* (landing on its intro when there is one)
+    const cur = queue[qi];
+    if (!cur) { qi = 0; startItem(true); return; }
+    if (dir < 0 && cur.kind === "news" && audio.currentTime > 5) { audio.currentTime = 0; return; }
+    const segs = activeSegs();
+    const pos = cur.kind === "outro" ? segs.length : segs.indexOf(cur.seg);
+    const target = segs[pos + dir];
+    if (target == null) { if (dir > 0) advanceToEnd(); return; }
+    jumpToSeg(target, true);
+  }
+  function advanceToEnd() { const j = queue.findIndex(q => q.kind === "outro"); if (j >= 0 && j !== qi) { qi = j; startItem(true); } }
+
+  function setBar(f) { f = Math.min(1, Math.max(0, f || 0)); $("fill").style.width = f * 100 + "%"; $("knob").style.left = f * 100 + "%"; }
+
+  // --- events
+  $("play").onclick = () => {
+    if (!data || !queue.length) return;
+    if (qi < 0) { qi = 0; startItem(true); return; }
+    audio.paused ? audio.play().catch(() => {}) : audio.pause();
+  };
+  $("next").onclick = () => segStep(1);
+  $("prev").onclick = () => segStep(-1);
+  $("refresh").onclick = () => load(true);
+  $("speed").onclick = () => {
+    speed = SPEEDS[(SPEEDS.indexOf(speed) + 1) % SPEEDS.length];
+    store.set("speed", speed); audio.playbackRate = speed;
+    $("speed").textContent = speed + "×"; updateLeft();
+  };
+  $("speed").textContent = speed + "×";
+
+  audio.addEventListener("play", () => setPlaying(true));
+  audio.addEventListener("pause", () => setPlaying(false));
+  audio.addEventListener("ended", advance);
+  audio.addEventListener("error", () => {
+    const q = queue[qi]; if (!q) return;
+    if (q.kind === "news") failed.add(q.seg);
+    advance();
+  });
+  audio.addEventListener("loadedmetadata", () => { audio.playbackRate = speed; });
+  audio.addEventListener("timeupdate", () => {
+    const q = queue[qi];
+    if (!q) return;
+    $("cur").textContent = fmt(audio.currentTime);
+    $("dur").textContent = fmt(audio.duration || (q.kind === "news" ? data.segments[q.seg].duration : 0));
+    setBar(audio.duration ? audio.currentTime / audio.duration : 0);
+    updateLeft();
+    if ("mediaSession" in navigator && audio.duration && navigator.mediaSession.setPositionState) {
+      try { navigator.mediaSession.setPositionState({ duration: audio.duration, position: audio.currentTime, playbackRate: audio.playbackRate }); } catch {}
+    }
+  });
+
+  // seek by tapping/dragging the bar
+  const bar = $("bar");
+  const seekTo = e => {
+    if (!audio.duration) return;
+    const r = bar.getBoundingClientRect();
+    const f = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+    audio.currentTime = f * audio.duration; setBar(f);
+  };
+  bar.addEventListener("pointerdown", e => { bar.setPointerCapture(e.pointerId); seekTo(e); bar.onpointermove = seekTo; });
+  bar.addEventListener("pointerup", () => { bar.onpointermove = null; });
+
+  if ("mediaSession" in navigator) {
+    const ms = navigator.mediaSession;
+    const h = (a, f) => { try { ms.setActionHandler(a, f); } catch {} };
+    h("play", () => audio.play()); h("pause", () => audio.pause());
+    h("nexttrack", () => segStep(1)); h("previoustrack", () => segStep(-1));
+    h("seekforward", d => { audio.currentTime += d?.seekOffset || 15; });
+    h("seekbackward", d => { audio.currentTime -= d?.seekOffset || 15; });
+    h("seekto", d => { if (d.seekTime != null) audio.currentTime = d.seekTime; });
+  }
+
+  // keep "updated x min ago" fresh; pick up a new build if one lands while idle
+  setInterval(() => { if (data && !pending) $("updated").textContent = "Updated " + ago(data.generated); }, 60000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden && audio.paused) load(false); });
+
+  load(false);
+})();
+</script>
+</body>
+</html>

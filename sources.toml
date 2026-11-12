@@ -1,0 +1,72 @@
+# Your news lineup. Segments play in the order listed here.
+# Set enabled = false to drop a source, or reorder blocks to change the order.
+# max_age_hours: skip a source if its newest episode is older than this
+# (keeps you from hearing yesterday's news from a source that hasn't updated).
+
+[settings]
+title = "Your News Briefing"
+voice = "en-US-AriaNeural"   # voice for the short spoken intros (Microsoft Edge neural voices)
+intros = true                # say "Next, from NPR..." between segments
+timezone = "America/New_York"
+
+[[source]]
+name = "NPR News Now"
+feed = "https://feeds.npr.org/500005/podcast.xml"
+enabled = true
+max_age_hours = 6
+
+[[source]]
+name = "Fox News Hourly Update"
+feed = "https://feeds.megaphone.fm/FOXM2252206613"
+enabled = true
+max_age_hours = 6
+
+[[source]]
+name = "ABC News Update"
+feed = "https://feeds.megaphone.fm/ESP9792844572"
+enabled = true
+max_age_hours = 6
+
+[[source]]
+name = "AP NewsWatch"
+feed = "https://audioboom.com/channels/5023446.rss"
+enabled = true
+max_age_hours = 12
+
+[[source]]
+name = "WSJ Minute Briefing"
+feed = "https://video-api.wsj.com/podcast/rss/wsj/minute-briefing"
+enabled = true
+max_age_hours = 24
+
+[[source]]
+name = "Marketplace Morning Report"
+feed = "https://feeds.publicradio.org/public_feeds/marketplace-morning-report"
+enabled = true
+max_age_hours = 30
+
+# ---- Longer shows, off by default. Flip enabled = true to add them. ----
+
+[[source]]
+name = "CNN 5 Things"
+feed = "https://feeds.megaphone.fm/WMHY2007701094"
+enabled = false
+max_age_hours = 30
+
+[[source]]
+name = "Reuters World News"
+feed = "https://feeds.megaphone.fm/reutersworldnews"
+enabled = false
+max_age_hours = 30
+
+[[source]]
+name = "Bloomberg Daybreak: US Edition"
+feed = "https://www.omnycontent.com/d/playlist/e73c998e-6e60-432f-8610-ae210140c5b1/d15648c4-cee0-4e99-a5ca-af80014d921d/65ce2954-d8a8-4c66-9f42-af80014d923e/podcast.rss"
+enabled = false
+max_age_hours = 30
+
+[[source]]
+name = "BBC Global News Podcast"
+feed = "https://podcasts.files.bbci.co.uk/p02nq0gn.rss"
+enabled = false
+max_age_hours = 30
