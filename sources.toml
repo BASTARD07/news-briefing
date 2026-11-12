@@ -45,7 +45,31 @@ feed = "https://feeds.publicradio.org/public_feeds/marketplace-morning-report"
 enabled = true
 max_age_hours = 30
 
+[[source]]
+name = "TechCrunch Daily Crunch"          # tech, ~7 min, weekdays
+feed = "https://feeds.megaphone.fm/techcrunch-daily-crunch"
+enabled = true
+max_age_hours = 30
+
+[[source]]
+name = "Wall Street Breakfast"            # markets & finance, ~3 min, weekdays
+feed = "https://www.spreaker.com/show/5725002/episodes/feed"
+enabled = true
+max_age_hours = 30
+
 # ---- Longer shows, off by default. Flip enabled = true to add them. ----
+
+[[source]]
+name = "WSJ Tech News Briefing"           # tech, ~12 min
+feed = "https://video-api.shdsvc.dowjones.io/api/podcasts/the%20wall%20street%20journal%20tech%20talk/feed"
+enabled = false
+max_age_hours = 30
+
+[[source]]
+name = "Bloomberg Tech"                   # tech & business, ~15-30 min
+feed = "https://www.omnycontent.com/d/playlist/e73c998e-6e60-432f-8610-ae210140c5b1/41764a4f-fc64-4e11-89ba-ae7c0030ab5e/9caafc41-289c-4115-995d-ae7c0030ab75/podcast.rss"
+enabled = false
+max_age_hours = 30
 
 [[source]]
 name = "CNN 5 Things"
